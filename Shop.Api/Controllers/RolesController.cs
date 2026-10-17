@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Shop.Api.Constants;
 using Shop.Api.Data;
 using Shop.Api.DTOs.Roles;
 using Shop.Api.Entities;
@@ -95,7 +96,7 @@ public class RolesController(ApplicationDbContext context) : ControllerBase
 
         if (role is null)
         {
-            return NotFound();
+            return NotFound(AppMessages.NotFoundMessage);
         }
 
         return Ok(role);

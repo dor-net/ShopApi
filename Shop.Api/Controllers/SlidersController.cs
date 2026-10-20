@@ -20,6 +20,8 @@ public class SlidersController(ApplicationDbContext context,
     public async Task<ActionResult> Create([FromForm] CreateSliderRequestDto request)
     {
         #region FileUpload
+
+
         //TODO: move to Helper Filer
         var uploadFolder = Path.Combine(environment.WebRootPath, "Sliders");
 
@@ -29,9 +31,11 @@ public class SlidersController(ApplicationDbContext context,
         }
 
         var fileName = $"{Guid.NewGuid()}{Path.GetExtension(request.Image.FileName)}";
+
         var filePath = Path.Combine(uploadFolder, fileName);
         await using var stream = new FileStream(filePath, FileMode.Create);
         await request.Image.CopyToAsync(stream);
+
         #endregion FileUpload
 
         #region SaveToDatabase
@@ -90,7 +94,7 @@ public class SlidersController(ApplicationDbContext context,
     }
 
     [HttpPut]
-    public async Task<ActionResult> Update([FromForm]UpdateSliderRequestDto request)
+    public async Task<ActionResult> Update([FromForm] UpdateSliderRequestDto request)
     {
         var slider = await context.Sliders
             .FirstOrDefaultAsync(s => s.Id == request.Id);
@@ -99,7 +103,7 @@ public class SlidersController(ApplicationDbContext context,
         {
             return NotFound(AppMessages.NotFoundMessage);
         }
-        
+
         #region FileUpload
         if (request.Image != null)
         {
@@ -146,6 +150,32 @@ public class SlidersController(ApplicationDbContext context,
 
         return NoContent();
     }
+
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> Delete(int id)
+    {
+        var slider = await context.Sliders.FirstOrDefaultAsync(x => x.Id == id);
+
+        if (slider == null)
+        {
+            return NotFound(AppMessages.NotFoundMessage);
+        }
+
+        context.Sliders.Remove(slider);
+        await context.SaveChangesAsync();
+
+        var normalazedImagename = slider.ImageUrl.Replace('/', Path.DirectorySeparatorChar);
+        var imagePath = Path.Combine(environment.WebRootPath, normalazedImagename);
+
+        if(System.IO.File.Exists(imagePath))
+        {
+            System.IO.File.Delete(imagePath);
+        }
+
+        return NoContent();
+    }
+
 }
 
 
